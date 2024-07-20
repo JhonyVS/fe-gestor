@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -9,6 +8,7 @@ const Header: React.FC = () => {
       <nav>
         <ul className="flex space-x-4">
           <li><Link to="/" className="text-white">Home</Link></li>
+          <li><Link to="/board" className="text-white">Tablero</Link></li>
           <li><Link to="/about" className="text-white">About</Link></li>
         </ul>
       </nav>

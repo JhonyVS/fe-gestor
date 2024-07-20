@@ -2,3 +2,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Agrega cualquier estilo personalizado adicional aquí */
+
+/* Estilos para los modales */
+.modal-container {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50;
+}
+
+.modal-content {
+  @apply bg-gray-700 p-8 rounded-lg shadow-lg w-full max-w-lg;
+}
+
+/* Ajuste del tamaño del texto */
+body {
+  text-size-adjust: 100%;
+}
+
+/* Asegurar que el contenedor de botones esté siempre encima */
+.button-container {
+  @apply absolute top-4 right-4 z-10 flex space-x-4;
+}
+
+.h1-container {
+  @apply absolute inset-0 flex justify-center items-center z-0;
+}
+
+.h2-container {
+  @apply absolute bottom-4 inset-x-0 flex justify-center items-center flex-col;
+}
