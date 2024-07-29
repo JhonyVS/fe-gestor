@@ -2,7 +2,7 @@
 import React from 'react';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
 import InputWithProps from '../InputWithProps';
-import logo from '../assets/logo.png';
+import logo from '../../assets/logo.png';
 
 interface LoginModalProps {
   isOpen: boolean;
