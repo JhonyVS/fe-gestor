@@ -1,5 +1,5 @@
-// src/components/LoginModal.tsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
 import InputWithProps from '../InputWithProps';
 import logo from '../../assets/logo.png';
@@ -10,7 +10,14 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+
   if (!isOpen) return null;
+
+  const handleLogin = () => {
+    // Aquí puedes agregar la lógica de autenticación
+    navigate('/home'); // Redirige a la página de inicio
+  };
 
   return (
     <div className="modal-container">
@@ -38,6 +45,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <button
               className="bg-customRed hover:bg-customLightRed text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="button"
+              onClick={handleLogin}
             >
               Iniciar Sesión
             </button>
