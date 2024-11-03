@@ -1,22 +1,31 @@
-// src/components/Menu.tsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { FaHome, FaTasks, FaProjectDiagram, FaUsers, FaUserTie } from 'react-icons/fa';
 
 const Menu: React.FC = () => {
-  const menuItemClass = "text-xl hover:text-gray-500";
+  const menuItemClass = "text-lg md:text-xl hover:text-gray-500 flex items-center space-x-2";
+
+  const menuItems = [
+    { name: 'home', label: 'Home', icon: <FaHome /> },
+    { name: 'boards', label: 'Boards', icon: <FaTasks /> },
+    { name: 'projects', label: 'Projects', icon: <FaProjectDiagram /> },
+    { name: 'teams', label: 'Teams', icon: <FaUsers /> },
+    { name: 'staff', label: 'Staff', icon: <FaUserTie /> },
+  ];
 
   return (
-    <nav className="bg-white text-gray-800 p-5">
-      <ul className="flex space-x-20 justify-center">
-        {['home', 'boards', 'projects', 'teams', 'staff'].map((item) => (
-          <li key={item}>
+    <nav className="bg-white text-gray-800 p-5 shadow-md">
+      <ul className="flex flex-wrap justify-center space-x-4 md:space-x-10">
+        {menuItems.map(({ name, label, icon }) => (
+          <li key={name} className="my-2">
             <NavLink
-              to={`/${item}`}
+              to={`/${name}`}
               className={({ isActive }) =>
                 isActive ? `${menuItemClass} font-bold` : menuItemClass
               }
             >
-              {item.charAt(0).toUpperCase() + item.slice(1)}
+              <span>{icon}</span>
+              <span>{label}</span>
             </NavLink>
           </li>
         ))}
@@ -26,3 +35,4 @@ const Menu: React.FC = () => {
 };
 
 export default Menu;
+

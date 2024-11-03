@@ -46,7 +46,7 @@ const LandingPage: React.FC = () => {
       </div>
       <div className="h2-container absolute bottom-4 inset-x-0 flex justify-center items-center flex-col">
         <h2 className="text-2xl">Dirigido a</h2>
-        <h2 className="text-2xl">Project Manager y Equipos de Desarrollo</h2>
+        <h2 className="text-2xl">Gestores de Proyectos y Equipos de Desarrollo</h2>
       </div>
       <Carousel />
       <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />

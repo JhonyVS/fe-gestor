@@ -10,25 +10,31 @@ import NotFoundPage from './pages/NotFoundPage';
 import Top from './components/Header/Top';
 import Menu from './components/Header/Menu';
 import './styles/App.css';
+import Footer from './components/Footer/Footer';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const showHeaderAndMenu = location.pathname !== '/';
+  const show = location.pathname !== '/'; // Mostrar solo si no es la landing page
 
   return (
-    <>
-      {showHeaderAndMenu && <Top />}
-      {showHeaderAndMenu && <Menu />}
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/boards" element={<BoardsPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/teams" element={<TeamsPage />} />
-        <Route path="/staff" element={<StaffPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </>
+    <div className="flex flex-col min-h-screen">
+      {show && <Top />}
+      {show && <Menu />}
+      
+      <div className="flex-grow">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/boards" element={<BoardsPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/staff" element={<StaffPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </div>
+      {/* Footer */}
+      {show && <Footer />}
+    </div>
   );
 };
 

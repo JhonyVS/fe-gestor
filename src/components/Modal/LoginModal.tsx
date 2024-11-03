@@ -14,9 +14,42 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleLogin = () => {
-    // Aquí puedes agregar la lógica de autenticación
-    navigate('/home'); // Redirige a la página de inicio
+  const handleLogin = async () => {
+    const credentials = {
+      username: (document.getElementById('username') as HTMLInputElement).value,
+      password: (document.getElementById('password') as HTMLInputElement).value,
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Guardar el token en sessionStorage
+        sessionStorage.setItem('token', data.jwt);
+
+        // Guardar los datos adicionales del usuario en sessionStorage
+        sessionStorage.setItem('id',data.id);
+        sessionStorage.setItem('user', data.username);
+        sessionStorage.setItem('nombres', data.nombres);
+        sessionStorage.setItem('apellidos', data.apellidos);
+
+        // Guardar la lista de UUIDs de proyectos (la conviertes a JSON porque es un array)
+        sessionStorage.setItem('projectUUIDs', JSON.stringify(data.projectUUIDs));
+
+        // Redirigir al home
+        navigate('/home');
+      } else {
+        console.error('Error al iniciar sesión');
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de autenticación', error);
+    }
   };
 
   return (
