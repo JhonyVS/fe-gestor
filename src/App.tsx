@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import BoardsPage from './pages/BoardsPage';
 import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import TeamsPage from './pages/TeamsPage';
 import StaffPage from './pages/StaffPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -27,6 +28,7 @@ const AppContent: React.FC = () => {
           <Route path="/home" element={<HomePage />} />
           <Route path="/boards" element={<BoardsPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:projectId" element={<ProjectDetailsPage />} /> {/* Ruta para detalles */}
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/staff" element={<StaffPage />} />
           <Route path="*" element={<NotFoundPage />} />

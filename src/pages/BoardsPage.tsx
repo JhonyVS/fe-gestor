@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 interface Task {
   id: string;
@@ -21,13 +21,21 @@ interface Board {
 
 const BoardsPage: React.FC = () => {
   const [boards, setBoards] = useState<Board[]>([]);
+  const [showTaskForm, setShowTaskForm] = useState<{ show: boolean; cardId: string | null }>({ show: false, cardId: null });
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [showBoardForm, setShowBoardForm] = useState(false);
+  const [newCardTitle, setNewCardTitle] = useState('');
+  const [showCardForm, setShowCardForm] = useState<{ show: boolean; boardId: string | null }>({ show: false, boardId: null });
+
+
 
   useEffect(() => {
     const fetchBoards = async () => {
       try {
-        // Obtén el token de sessionStorage
         const token = sessionStorage.getItem('token');
-        const userId = sessionStorage.getItem('id'); // Asumiendo que el ID del usuario también está guardado
+        const userId = sessionStorage.getItem('id');
         
         if (!token || !userId) {
           console.error('Token or userId is missing');
@@ -48,7 +56,6 @@ const BoardsPage: React.FC = () => {
 
         const data = await response.json();
         
-        // Mapear la respuesta para adaptarla a la estructura de Board
         const mappedBoards: Board[] = data.tableros.map((tablero: any) => ({
           id: tablero.id,
           title: tablero.titulo,
@@ -72,39 +79,214 @@ const BoardsPage: React.FC = () => {
     fetchBoards();
   }, []);
 
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+
+    if (!destination) return;
+
+    const sourceBoardIndex = boards.findIndex(board =>
+      board.cards.some(card => card.id === source.droppableId)
+    );
+    const destBoardIndex = boards.findIndex(board =>
+      board.cards.some(card => card.id === destination.droppableId)
+    );
+
+    if (sourceBoardIndex === -1 || destBoardIndex === -1) return;
+
+    const sourceCard = boards[sourceBoardIndex].cards.find(card => card.id === source.droppableId);
+    const destCard = boards[destBoardIndex].cards.find(card => card.id === destination.droppableId);
+
+    if (!sourceCard || !destCard) return;
+
+    const [movedTask] = sourceCard.tasks.splice(source.index, 1);
+    destCard.tasks.splice(destination.index, 0, movedTask);
+
+    const updatedBoards = [...boards];
+    setBoards(updatedBoards);
+  };
+
+  const handleAddTaskClick = (cardId: string) => {
+    setShowTaskForm({ show: true, cardId });
+  };
+
+  const handleAddTask = () => {
+    if (showTaskForm.cardId) {
+      setBoards(prevBoards => {
+        return prevBoards.map(board => {
+          return {
+            ...board,
+            cards: board.cards.map(card => {
+              if (card.id === showTaskForm.cardId) {
+                return {
+                  ...card,
+                  tasks: [
+                    ...card.tasks,
+                    {
+                      id: `task-${Date.now()}`,
+                      title: newTaskTitle,
+                      description: newTaskDescription
+                    }
+                  ]
+                };
+              }
+              return card;
+            })
+          };
+        });
+      });
+    }
+    setNewTaskTitle('');
+    setNewTaskDescription('');
+    setShowTaskForm({ show: false, cardId: null });
+  };
+  const handleAddBoard = () => {
+    const newBoard: Board = {
+      id: `board-${Date.now()}`,
+      title: newBoardTitle || `Nuevo Tablero ${boards.length + 1}`,
+      cards: [] // Inicialmente vacío
+    };
+    setBoards([...boards, newBoard]);
+    setNewBoardTitle('');
+    setShowBoardForm(false);
+  };
+  const handleAddCard = () => {
+    if (showCardForm.boardId) {
+      setBoards(prevBoards => {
+        return prevBoards.map(board => {
+          if (board.id === showCardForm.boardId) {
+            return {
+              ...board,
+              cards: [
+                ...board.cards,
+                {
+                  id: `card-${Date.now()}`,
+                  title: newCardTitle,
+                  tasks: [] // Inicialmente vacío
+                }
+              ]
+            };
+          }
+          return board;
+        });
+      });
+    }
+    setNewCardTitle('');
+    setShowCardForm({ show: false, boardId: null });
+  };
+  
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-8">Tableros</h1>
-      
-      {/* Mostrar tableros */}
-      <div className="grid grid-cols-1 gap-8">
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="p-8 bg-gradient-to-b from-gray-100 to-white">
+        <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700">Tableros</h1>
+        
+        <div className="space-y-10">
         {boards.map((board) => (
-          <div key={board.id} className="p-6 bg-gray-100 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">{board.title}</h2>
-            <div className="grid grid-cols-3 gap-4">
+          <div key={board.id} className="p-6 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-left">{board.title}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {board.cards.map((card) => (
-                <div key={card.id} className="p-4 bg-white rounded shadow-md">
-                  <h3 className="text-lg font-bold mb-2">{card.title}</h3>
-                  <ul>
-                    {card.tasks.map((task) => (
-                      <li key={task.id} className="p-2 bg-gray-200 rounded mb-2">
-                        {task.title}
-                      </li>
-                    ))}
-                  </ul>
-                  <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Agregar tarea</button>
-                </div>
+                <Droppable droppableId={card.id} key={card.id}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="min-w-[300px] p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200"
+                    >
+                      <h3 className="text-xl font-medium mb-3 text-blue-600">{card.title}</h3>
+                      <ul className="space-y-2">
+                        {card.tasks.map((task, index) => (
+                          <Draggable draggableId={task.id} index={index} key={task.id}>
+                            {(provided) => (
+                              <li
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-700"
+                              >
+                                {task.title}
+                              </li>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </ul>
+                      <button onClick={() => handleAddTaskClick(card.id)} className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200">Agregar tarea</button>
+                    </div>
+                  )}
+                </Droppable>
               ))}
             </div>
+            <button onClick={() => setShowCardForm({ show: true, boardId: board.id })} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors duration-200">
+              Agregar tarjeta
+            </button>
           </div>
         ))}
-      </div>
+        </div>
 
-      {/* Botón para agregar nuevo tablero */}
-      <div className="mt-8">
-        <button className="bg-green-500 text-white px-4 py-2 rounded">Agregar nuevo tablero</button>
+        {showTaskForm.show && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded shadow-md">
+              <h2 className="text-2xl mb-4">Nueva Tarea</h2>
+              <input
+                type="text"
+                placeholder="Título de la tarea"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                className="w-full mb-2 p-2 border rounded"
+              />
+              <textarea
+                placeholder="Descripción de la tarea"
+                value={newTaskDescription}
+                onChange={(e) => setNewTaskDescription(e.target.value)}
+                className="w-full mb-2 p-2 border rounded"
+              ></textarea>
+              <button onClick={handleAddTask} className="bg-green-500 text-white px-4 py-2 rounded mr-2">Agregar</button>
+              <button onClick={() => setShowTaskForm({ show: false, cardId: null })} className="bg-red-500 text-white px-4 py-2 rounded">Cancelar</button>
+            </div>
+          </div>
+        )}
+        {showBoardForm && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded shadow-md">
+              <h2 className="text-2xl mb-4">Nuevo Tablero</h2>
+              <input
+                type="text"
+                placeholder="Título del tablero"
+                value={newBoardTitle}
+                onChange={(e) => setNewBoardTitle(e.target.value)}
+                className="w-full mb-2 p-2 border rounded"
+              />
+              <button onClick={handleAddBoard} className="bg-green-500 text-white px-4 py-2 rounded mr-2">Agregar</button>
+              <button onClick={() => setShowBoardForm(false)} className="bg-red-500 text-white px-4 py-2 rounded">Cancelar</button>
+            </div>
+          </div>
+        )}
+        {showCardForm.show && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded shadow-md">
+              <h2 className="text-2xl mb-4">Nueva Tarjeta</h2>
+              <input
+                type="text"
+                placeholder="Título de la tarjeta"
+                value={newCardTitle}
+                onChange={(e) => setNewCardTitle(e.target.value)}
+                className="w-full mb-2 p-2 border rounded"
+              />
+              <button onClick={handleAddCard} className="bg-green-500 text-white px-4 py-2 rounded mr-2">Agregar</button>
+              <button onClick={() => setShowCardForm({ show: false, boardId: null })} className="bg-red-500 text-white px-4 py-2 rounded">Cancelar</button>
+            </div>
+          </div>
+        )}
+
+
+
+        <div className="mt-12 flex justify-center">
+          <button onClick={() => setShowBoardForm(true)} className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition-transform transform hover:scale-105">Agregar nuevo tablero</button>
+        </div>
+
       </div>
-    </div>
+    </DragDropContext>
   );
 };
 
