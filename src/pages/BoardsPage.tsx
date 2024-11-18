@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { FaPlus, FaTasks, FaColumns, FaTrello, FaClipboard } from 'react-icons/fa';
 
 interface Task {
   id: string;
@@ -28,8 +29,6 @@ const BoardsPage: React.FC = () => {
   const [showBoardForm, setShowBoardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
   const [showCardForm, setShowCardForm] = useState<{ show: boolean; boardId: string | null }>({ show: false, boardId: null });
-
-
 
   useEffect(() => {
     const fetchBoards = async () => {
@@ -173,17 +172,20 @@ const BoardsPage: React.FC = () => {
     setNewCardTitle('');
     setShowCardForm({ show: false, boardId: null });
   };
-  
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="p-8 bg-gradient-to-b from-gray-100 to-white">
-        <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700">Tableros</h1>
+        <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700 flex items-center justify-center space-x-3">
+          <FaTrello /> <span>Tableros</span>
+        </h1>
         
         <div className="space-y-10">
         {boards.map((board) => (
           <div key={board.id} className="p-6 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-left">{board.title}</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center space-x-2">
+              <FaClipboard /> <span>{board.title}</span>
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {board.cards.map((card) => (
                 <Droppable droppableId={card.id} key={card.id}>
@@ -193,7 +195,9 @@ const BoardsPage: React.FC = () => {
                       {...provided.droppableProps}
                       className="min-w-[300px] p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200"
                     >
-                      <h3 className="text-xl font-medium mb-3 text-blue-600">{card.title}</h3>
+                      <h3 className="text-xl font-medium mb-3 text-blue-600 flex items-center space-x-2">
+                        <FaTasks /> <span>{card.title}</span>
+                      </h3>
                       <ul className="space-y-2">
                         {card.tasks.map((task, index) => (
                           <Draggable draggableId={task.id} index={index} key={task.id}>
@@ -211,14 +215,19 @@ const BoardsPage: React.FC = () => {
                         ))}
                         {provided.placeholder}
                       </ul>
-                      <button onClick={() => handleAddTaskClick(card.id)} className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200">Agregar tarea</button>
+                      <button onClick={() => handleAddTaskClick(card.id)} className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200 flex items-center space-x-2">
+                        <FaPlus /> <span>Agregar tarea</span>
+                        </button>
                     </div>
                   )}
                 </Droppable>
               ))}
             </div>
-            <button onClick={() => setShowCardForm({ show: true, boardId: board.id })} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors duration-200">
-              Agregar tarjeta
+            <button
+              onClick={() => setShowCardForm({ show: true, boardId: board.id })}
+              className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors duration-200 flex items-center space-x-2"
+            >
+              <FaPlus /> <span>Agregar tarjeta</span>
             </button>
           </div>
         ))}
@@ -246,6 +255,7 @@ const BoardsPage: React.FC = () => {
             </div>
           </div>
         )}
+
         {showBoardForm && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded shadow-md">
@@ -262,6 +272,7 @@ const BoardsPage: React.FC = () => {
             </div>
           </div>
         )}
+
         {showCardForm.show && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded shadow-md">
@@ -279,15 +290,19 @@ const BoardsPage: React.FC = () => {
           </div>
         )}
 
-
-
         <div className="mt-12 flex justify-center">
-          <button onClick={() => setShowBoardForm(true)} className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition-transform transform hover:scale-105">Agregar nuevo tablero</button>
+          <button
+            onClick={() => setShowBoardForm(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition-transform transform hover:scale-105 flex items-center space-x-3"
+          >
+            <FaPlus /> <span>Agregar nuevo tablero</span>
+          </button>
         </div>
-
       </div>
     </DragDropContext>
   );
 };
 
 export default BoardsPage;
+
+                     

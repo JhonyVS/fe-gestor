@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUserTie, FaUsers, FaRegFileAlt } from 'react-icons/fa';
+import { FaUserTie, FaUsers, FaRegFileAlt  } from 'react-icons/fa';
+import { BiTask } from 'react-icons/bi';
+
 
 interface EquipoDTO {
   id: string;
@@ -117,7 +119,10 @@ const ProjectsPage: React.FC = () => {
     <div className="bg-gray-100 p-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Mis Proyectos</h1>
+          <h1 className="text-3xl font-bold flex items-center space-x-2 text-blue-700">
+            <BiTask  />
+            <span>Mis Proyectos</span>
+          </h1>
           <button
             onClick={openModal}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
