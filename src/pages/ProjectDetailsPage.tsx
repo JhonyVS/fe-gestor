@@ -1,4 +1,3 @@
-// src/pages/ProjectDetailsPage.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Doughnut } from 'react-chartjs-2';
@@ -6,10 +5,12 @@ import { useParams } from 'react-router-dom';
 import ProgressBar from '../components/Graphics/ProgressBar';
 import { Link } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { FaUsers, FaComments, FaHistory,FaEnvelope, FaPhone, FaUserTag, FaChartLine, FaTasks, FaShieldAlt } from 'react-icons/fa';
+import { FaUsers, FaComments, FaEnvelope, FaPhone, FaUserTag, FaChartLine, FaTasks, FaShieldAlt, FaFlagCheckered, FaClock, FaCalendarAlt, FaFlag, FaPlus } from 'react-icons/fa';
 
-// Registrar los componentes para Chart.js
-ChartJS.register(ArcElement,CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+import CreateEventModal from "../components/Modal/CreateEventModalProps";
+
+
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface UsuarioDTO {
   id: string;
@@ -20,6 +21,18 @@ interface UsuarioDTO {
   rol: string;
 }
 
+interface UsuarioBasicDTO {
+  nombres: string;
+  apellidos: string;
+}
+
+interface ComentarioDTO {
+  id: string;
+  contenido: string;
+  createdAt: string;
+  usuario: UsuarioBasicDTO;
+}
+
 interface EquipoDTO {
   id: string;
   nombre: string;
@@ -27,13 +40,20 @@ interface EquipoDTO {
   integrantes: UsuarioDTO[];
 }
 
-// Datos para el gráfico de avance
+interface EventoDTO {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  fechaInicio: string;
+  fechaFin: string;
+}
+
 const chartData = {
   labels: ['Tareas Completadas', 'Tareas Pendientes', 'Tareas en Proceso'],
   datasets: [
     {
       label: 'Progreso del Proyecto',
-      data: [40, 20, 10], // Aquí cambiamos con valores reales
+      data: [40, 20, 10],
       backgroundColor: ['#4CAF50', '#FF9800', '#2196F3'],
       borderColor: ['#388E3C', '#F57C00', '#1976D2'],
       borderWidth: 1,
@@ -43,7 +63,7 @@ const chartData = {
 
 const chartOptions = {
   responsive: true,
-  maintainAspectRatio: false, // Permite personalizar la relación de aspecto
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'top' as const,
@@ -53,29 +73,13 @@ const chartOptions = {
       text: 'Avance del Proyecto',
     },
   },
-  scales: {
-    x: {
-      ticks: {
-        maxRotation: 0, // Ajusta la rotación de etiquetas
-        minRotation: 0,
-      },
-    },
-    y: {
-      beginAtZero: true,
-    },
-  },
 };
 
-
-
-
-
-// Datos para el gráfico de progreso
 const progressChartData = {
   labels: ['Completadas', 'Pendientes', 'En Proceso'],
   datasets: [
     {
-      data: [50, 30, 20], // Sustituir con datos dinámicos
+      data: [50, 30, 20],
       backgroundColor: ['#4CAF50', '#FF9800', '#2196F3'],
       hoverBackgroundColor: ['#388E3C', '#F57C00', '#1976D2'],
       borderWidth: 1,
@@ -104,33 +108,45 @@ const progressChartOptions = {
 
 
 
-
-
-
 const ProjectDetailsPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<{ nombre: string; descripcion: string } | null>(null);
+  const [project, setProject] = useState<{ nombre: string; descripcion: string; fechaInicio: string; fechaFinal: string } | null>(null);
   const [equipos, setEquipos] = useState<EquipoDTO[]>([]);
+  const [comentarios, setComentarios] = useState<ComentarioDTO[]>([]);
+  const [eventos, setEventos] = useState<EventoDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const token = sessionStorage.getItem('token');
+
+  const [nuevoComentario, setNuevoComentario] = useState<string>('');
 
   useEffect(() => {
-    const fetchProjectDetails = async () => {
-      const token = sessionStorage.getItem('token');
-
+    const fetchData = async () => {
       try {
-        const projectResponse = await axios.get(`http://localhost:8080/proyecto/find/${projectId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProject(projectResponse.data);
+        const [projectResponse, equiposResponse, comentariosResponse, eventosResponse] = await Promise.all([
+          axios.get(`http://localhost:8080/proyecto/find/${projectId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get<EquipoDTO[]>(`http://localhost:8080/proyecto/${projectId}/equipos`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get<ComentarioDTO[]>(`http://localhost:8080/comentario/proyecto/${projectId}/detallado`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get<EventoDTO[]>(`http://localhost:8080/evento/proyecto/${projectId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-        const equiposResponse = await axios.get<EquipoDTO[]>(`http://localhost:8080/proyecto/${projectId}/equipos`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // Ordenar eventos por fechaInicio antes de establecer el estado
+        const eventosOrdenados = eventosResponse.data.sort(
+          (a, b) => new Date(a.fechaInicio).getTime() - new Date(b.fechaInicio).getTime()
+        );
+        setEventos(eventosOrdenados);
+
+        setProject(projectResponse.data);
         setEquipos(equiposResponse.data);
+        setComentarios(comentariosResponse.data);
+        setEventos(eventosResponse.data);
       } catch (error) {
         console.error('Error fetching project details or teams:', error);
       } finally {
@@ -138,69 +154,106 @@ const ProjectDetailsPage: React.FC = () => {
       }
     };
 
-    fetchProjectDetails();
-  }, [projectId]);
+    fetchData();
+  }, [projectId, token]);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  // modal para crear eventos
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
-  if (!project) {
-    return <p>Project not found</p>;
-  }
+  const handleCreateEvent = async (evento: { titulo: string; descripcion: string; fechaInicio: string }) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/evento/create`,
+        { ...evento, idProyecto: projectId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  function openEventModal(): void {
-    throw new Error('Function not implemented.');
-  }
+      // Actualizar la lista de eventos
+      setEventos((prevEventos) => [...prevEventos, response.data]);
+      setShowCreateEventModal(false); // Cerrar el modal
+    } catch (error) {
+      console.error("Error al crear el evento:", error);
+      alert("No se pudo crear el evento. Intenta nuevamente.");
+    }
+  };
 
-  function openAddMemberModal(): void {
-    throw new Error('Function not implemented.');
-  }
+
+  const agregarComentario = async () => {
+    if (!nuevoComentario.trim()) {
+      alert('El comentario no puede estar vacío.');
+      return;
+    }
+  
+    // Obtener el ID del usuario desde sessionStorage
+    const usuarioId = sessionStorage.getItem('id');
+    if (!usuarioId) {
+      alert('No se pudo encontrar el ID del usuario en la sesión.');
+      return;
+    }
+  
+    // Crear el DTO según el nuevo formato
+    const comentarioDTO = {
+      usuario: {
+        id: usuarioId, // Ahora el usuario es un objeto con su ID
+      },
+      idProyecto: projectId,
+      contenido: nuevoComentario,
+    };
+  
+    try {
+      // Enviar la solicitud POST al backend
+      const response = await axios.post(
+        'http://localhost:8080/comentario/create',
+        comentarioDTO,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      // Actualizar la lista de comentarios en el frontend
+      setComentarios((prevComentarios) => [...prevComentarios, response.data]);
+  
+      // Limpiar el campo de entrada de texto
+      setNuevoComentario('');
+    } catch (error) {
+      console.error('Error al agregar comentario:', error);
+      alert('Ocurrió un error al agregar el comentario. Por favor, inténtelo de nuevo.');
+    }
+  };
+  
+
+  if (loading) return <p>Loading...</p>;
+  if (!project) return <p>Project not found</p>;
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-4xl font-extrabold mb-6 text-blue-700">{project.nombre}</h1>
       <p className="text-gray-600 mb-8 text-lg">{project.descripcion}</p>
 
+      {/* Gestión del Proyecto */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestión del Proyecto</h1>
-        <div className="flex space-x-4">
-          <button
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
-            onClick={() => openAddMemberModal()}
-          >
-            Agregar Integrantes
-          </button>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-            onClick={() => openEventModal()}
-          >
-            Crear Evento
-          </button>
-        </div>
       </div>
-
 
       {/* Sección de Avance */}
       <section className="mb-8">
         <h2 className="text-3xl font-semibold mb-4 flex items-center text-green-700">
           <FaChartLine className="mr-2" /> Avance
         </h2>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">Tareas</h3>
-        {/* Gráfico Circular */}
         <div className="mb-8 bg-white p-6 rounded-lg shadow-md flex justify-center items-center" style={{ maxWidth: '400px', margin: '0 auto' }}>
-              <Doughnut data={progressChartData} options={progressChartOptions} />
-            </div>
-
-            {/* Barra de Progreso */}
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Progreso General</h3>
-              <ProgressBar progress={50} /> {/* Sustituir el valor 50 por datos dinámicos */}
-            </div>
+          <Doughnut data={progressChartData} options={progressChartOptions} />
+        </div>
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Progreso General</h3>
+          <ProgressBar progress={50} />
+        </div>
       </section>
 
 
 
+      {/* KPIs del Proyecto */}
       <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-3xl font-semibold mb-4 flex items-center text-teal-600">
           <FaChartLine className="mr-2" /> KPIs del Proyecto
@@ -221,72 +274,80 @@ const ProjectDetailsPage: React.FC = () => {
         </ul>
       </section>
 
-      {/* Sección de Progreso */}
-      <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-3xl font-semibold mb-6 flex items-center text-yellow-600">
-          <FaTasks className="mr-2" /> Progreso
-        </h2>
-        <div className="relative">
-          {/* Línea Vertical */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-full w-1 bg-gray-300"></div>
-          {/* Eventos */}
-          <div className="space-y-8">
-            {/* Evento 1 */}
-            <div className="relative flex items-center">
-              <div className="flex-1 text-right pr-8">
-                <p className="text-sm text-gray-500">2024-11-01</p>
-                <h3 className="text-lg font-semibold text-gray-800">Inicio del Proyecto</h3>
-                <p className="text-gray-600">El proyecto comenzó oficialmente con la planificación inicial.</p>
-              </div>
-              <div className="relative z-10 w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white font-semibold">
-                1
-              </div>
-            </div>
-            {/* Evento 2 */}
-            <div className="relative flex items-center">
-              <div className="relative z-10 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
-                2
-              </div>
-              <div className="flex-1 pl-8">
-                <p className="text-sm text-gray-500">2024-11-05</p>
-                <h3 className="text-lg font-semibold text-gray-800">Primera Reunión</h3>
-                <p className="text-gray-600">Se establecieron metas y objetivos para el sprint inicial.</p>
-              </div>
-            </div>
-            {/* Evento 3 */}
-            <div className="relative flex items-center">
-              <div className="flex-1 text-right pr-8">
-                <p className="text-sm text-gray-500">2024-11-10</p>
-                <h3 className="text-lg font-semibold text-gray-800">Inicio del Sprint 1</h3>
-                <p className="text-gray-600">Se asignaron las tareas para el primer sprint.</p>
-              </div>
-              <div className="relative z-10 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                3
-              </div>
-            </div>
-            {/* Evento 4 */}
-            <div className="relative flex items-center">
-              <div className="relative z-10 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-semibold">
-                4
-              </div>
-              <div className="flex-1 pl-8">
-                <p className="text-sm text-gray-500">2024-11-20</p>
-                <h3 className="text-lg font-semibold text-gray-800">Fin del Sprint 1</h3>
-                <p className="text-gray-600">Se completaron las tareas y se presentó el resultado al cliente.</p>
-              </div>
-            </div>
-          </div>
+
+
+      {/* Sección de Eventos */}
+      <section className="mt-8 bg-white p-8 rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-semibold text-yellow-600 flex items-center">
+            <FaTasks className="mr-2" /> Eventos Importantes
+          </h2>
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+            onClick={() => setShowCreateEventModal(true)}
+          >
+            <FaPlus className="mr-2" /> Crear Evento
+          </button>
         </div>
+
+        <ul className="space-y-6">
+          {/* Fecha de inicio del proyecto */}
+          {project && (
+            <li className="flex items-start bg-yellow-50 p-4 rounded-md shadow-sm border-l-4 border-yellow-500">
+              <FaFlag className="text-yellow-600 mr-4 mt-1" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-700">Inicio del Proyecto</h3>
+                <p className="text-gray-600">{new Date(project.fechaInicio).toLocaleString()}</p>
+              </div>
+            </li>
+          )}
+
+          {/* Eventos ya ordenados */}
+          {eventos.map((evento, index) => (
+            <li
+              key={index}
+              className="flex items-start bg-blue-50 p-4 rounded-md shadow-sm border-l-4 border-blue-500"
+            >
+              <FaCalendarAlt className="text-blue-600 mr-4 mt-1" />
+              <div>
+                <h3 className="text-lg font-semibold text-blue-700">{evento.titulo}</h3>
+                <p className="text-gray-600">{evento.descripcion}</p>
+                <p className="text-sm text-gray-500">
+                  <FaClock className="inline-block mr-1" />
+                  {new Date(evento.fechaInicio).toLocaleString()}
+                </p>
+              </div>
+            </li>
+          ))}
+
+          {/* Fecha de fin del proyecto */}
+          {project && (
+            <li className="flex items-start bg-green-50 p-4 rounded-md shadow-sm border-l-4 border-green-500">
+              <FaFlagCheckered className="text-green-600 mr-4 mt-1" />
+              <div>
+                <h3 className="text-lg font-semibold text-green-700">Fin del Proyecto</h3>
+                <p className="text-gray-600">{new Date(project.fechaFinal).toLocaleString()}</p>
+              </div>
+            </li>
+          )}
+        </ul>
+
+        <CreateEventModal
+          isOpen={showCreateEventModal}
+          onClose={() => setShowCreateEventModal(false)}
+          onCreate={handleCreateEvent}
+        />
       </section>
+
 
 
 
 
       {/* Sección de Equipo */}
       <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
-      <Link to="/teams" className="text-3xl font-semibold mb-4 flex items-center text-blue-700 hover:underline">
-        <FaUsers className="mr-2" /> Equipo
-      </Link>
+        <Link to="/teams" className="text-3xl font-semibold mb-4 flex items-center text-blue-700 hover:underline">
+          <FaUsers className="mr-2" /> Equipo
+        </Link>
         {equipos.length > 0 ? (
           equipos.map((equipo) => (
             <div key={equipo.id} className="mb-6 p-4 bg-white rounded-lg shadow-md border border-gray-200">
@@ -319,22 +380,6 @@ const ProjectDetailsPage: React.FC = () => {
       </section>
 
 
-      <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-3xl font-semibold mb-4 flex items-center text-blue-600">
-          <FaHistory className="mr-2" /> Histórico de Cambios
-        </h2>
-        <ul className="list-disc pl-5 space-y-2 text-gray-700">
-          <li>
-            <strong>2024-11-01:</strong> Revisión de requisitos iniciales con el cliente.
-          </li>
-          <li>
-            <strong>2024-11-05:</strong> Ajuste en el cronograma por retrasos en las pruebas.
-          </li>
-          <li>
-            <strong>2024-11-10:</strong> Entrega de la primera versión funcional al cliente.
-          </li>
-        </ul>
-      </section>
 
 
       {/* Sección de Gestión de Riesgos */}
@@ -346,25 +391,37 @@ const ProjectDetailsPage: React.FC = () => {
       </section>
 
 
+
+
+
+      {/* Sección de Comentarios */}
       <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-3xl font-semibold mb-4 flex items-center text-purple-600">
-          <FaComments className="mr-2" /> Comentarios del Proyecto
+          <FaComments className="mr-2" /> Comentarios
         </h2>
         <div className="space-y-4">
-          <div className="border border-gray-300 p-4 rounded-md">
-            <p className="text-sm text-gray-500">Juan Pérez - 2024-11-13</p>
-            <p className="text-gray-700">El cliente aprobó el diseño inicial. Iniciaremos el desarrollo.</p>
-          </div>
+          {comentarios.map((comentario) => (
+            <div key={comentario.id} className="border border-gray-300 p-4 rounded-md">
+              <p className="text-sm text-gray-500">
+                {new Date(comentario.createdAt).toLocaleDateString()} - {comentario.usuario.nombres} {comentario.usuario.apellidos}
+              </p>
+              <p className="text-gray-700">{comentario.contenido}</p>
+            </div>
+          ))}
           <textarea
+            value={nuevoComentario}
+            onChange={(e) => setNuevoComentario(e.target.value)}
             placeholder="Agregar un comentario..."
             className="w-full border border-gray-300 rounded-md p-2"
           ></textarea>
-          <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300">
+          <button
+            onClick={agregarComentario}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300"
+          >
             Agregar
           </button>
         </div>
       </section>
-
     </div>
   );
 };
