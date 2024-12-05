@@ -45,6 +45,7 @@ const ProjectsPage: React.FC = () => {
     fechaInicio: today,
     fechaFinal: defaultEndDate
   });
+  
 
   useEffect(() => {
     const fetchProjects = async () => {

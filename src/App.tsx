@@ -12,6 +12,8 @@ import Top from './components/Header/Top';
 import Menu from './components/Header/Menu';
 import './styles/App.css';
 import Footer from './components/Footer/Footer';
+import ProjectDetailsAvancePage from './pages/ProjectDetailsAvancePage';
+import NotAuthorizedPage from './pages/NotAuthorizedPage';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -29,6 +31,8 @@ const AppContent: React.FC = () => {
           <Route path="/boards" element={<BoardsPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailsPage />} /> {/* Ruta para detalles */}
+          <Route path="/projects/avance/:projectId/" element={<ProjectDetailsAvancePage />} /> {/* Ruta para detalles del avance */}
+          <Route path="/notauthorized" element={<NotAuthorizedPage />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/staff" element={<StaffPage />} />
           <Route path="*" element={<NotFoundPage />} />
