@@ -72,6 +72,7 @@ const BoardsPage: React.FC = () => {
         setBoards(mappedBoards);
       } catch (error) {
         console.error('Error fetching boards:', error);
+  
       }
     };
 

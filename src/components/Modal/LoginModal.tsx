@@ -40,7 +40,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         sessionStorage.setItem('apellidos', data.apellidos);
 
         // Guardar la lista de UUIDs de proyectos (la conviertes a JSON porque es un array)
-        sessionStorage.setItem('projectUUIDs', JSON.stringify(data.projectUUIDs));
+        //sessionStorage.setItem('projectUUIDs', JSON.stringify(data.projectUUIDs));
 
         // Redirigir al home
         navigate('/home');
