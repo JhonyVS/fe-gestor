@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Doughnut } from 'react-chartjs-2';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import ProgressBar from '../components/Graphics/ProgressBar';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { FaUsers, FaComments, FaEnvelope, FaPhone, FaUserTag, FaChartLine, FaTasks, FaShieldAlt, FaFlagCheckered, FaClock, FaCalendarAlt, FaFlag, FaPlus } from 'react-icons/fa';
@@ -441,12 +441,14 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
                 {equipo.integrantes.map((integrante) => (
                   <li key={integrante.id} className="flex items-center bg-gray-50 p-3 rounded-lg shadow-sm border border-gray-100">
                     <div className="flex-1">
-                      <h4 className="text-lg font-medium text-gray-800 flex items-center">
+                    <h4 className="text-lg font-medium text-gray-800 flex items-center">
+                      <Link to={`/profile/${integrante.id}`} className="hover:underline">
                         {integrante.nombres} {integrante.apellidos}
-                        <span className="ml-3 flex items-center bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-semibold">
-                          <FaUserTag className="mr-1" /> {integrante.rol}
-                        </span>
-                      </h4>
+                      </Link>
+                      <span className="ml-3 flex items-center bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-semibold">
+                        <FaUserTag className="mr-1" /> {integrante.rol}
+                      </span>
+                    </h4>
                       <p className="text-gray-600 flex items-center">
                         <FaEnvelope className="mr-2 text-blue-500" /> {integrante.email}
                       </p>
@@ -470,7 +472,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
       <section className="mt-8 bg-white p-8 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-semibold text-purple-600 flex items-center">
-            <FaComments className="mr-2" /> Comentarios
+            <FaComments className="mr-2" /> Notas del proyecto
           </h2>
         </div>
 
@@ -500,7 +502,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center">Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+            <p className="text-gray-500 text-center">Aún no hay notas. ¡Sé el primero en comentar!</p>
           )}
         </div>
 
@@ -509,14 +511,14 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
           <textarea
             value={nuevoComentario}
             onChange={(e) => setNuevoComentario(e.target.value)}
-            placeholder="Escribe tu comentario aquí..."
+            placeholder="Escribe aquí..."
             className="w-full border border-gray-300 rounded-md p-3 focus:ring-purple-500 focus:border-purple-500 shadow-sm"
           ></textarea>
           <button
             onClick={agregarComentario}
             className="mt-4 flex items-center bg-white text-purple-600 border border-purple-600 px-6 py-3 rounded-lg hover:bg-purple-100 hover:border-purple-700 transition duration-300"
           >
-            <FaPlus className="inline-block mr-2" /> Agregar Comentario
+            <FaPlus className="inline-block mr-2" /> Agregar Nota
           </button>
         </div>
       </section>

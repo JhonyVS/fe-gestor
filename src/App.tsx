@@ -1,55 +1,18 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import HomePage from './pages/HomePage';
-import BoardsPage from './pages/BoardsPage';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage';
-import TeamsPage from './pages/TeamsPage';
-import StaffPage from './pages/StaffPage';
-import NotFoundPage from './pages/NotFoundPage';
-import Top from './components/Header/Top';
-import Menu from './components/Header/Menu';
-import './styles/App.css';
-import Footer from './components/Footer/Footer';
-import ProjectDetailsAvancePage from './pages/ProjectDetailsAvancePage';
-import NotAuthorizedPage from './pages/NotAuthorizedPage';
-
-const AppContent: React.FC = () => {
-  const location = useLocation();
-  const show = location.pathname !== '/'; // Mostrar solo si no es la landing page
-
-  return (
-    <div className="flex flex-col min-h-screen">
-      {show && <Top />}
-      {show && <Menu />}
-      
-      <div className="flex-grow">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/boards" element={<BoardsPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:projectId" element={<ProjectDetailsPage />} /> {/* Ruta para detalles */}
-          <Route path="/projects/avance/:projectId/" element={<ProjectDetailsAvancePage />} /> {/* Ruta para detalles del avance */}
-          <Route path="/notauthorized" element={<NotAuthorizedPage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/staff" element={<StaffPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </div>
-      {/* Footer */}
-      {show && <Footer />}
-    </div>
-  );
-};
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppContent from './AppContent';
+import { Provider } from 'react-redux';
+import { store } from './app/store';
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <AppContent />
+      </Router>
+    </Provider>
   );
 };
 
 export default App;
+

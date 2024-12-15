@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaUsers, FaUserTag, FaEnvelope, FaPhone } from 'react-icons/fa';
 import CreateTeamButton from '../components/Modal/CreateButtonTeam';
 import AgregarIntegranteModal from '../components/Modal/AgregarIntegranteModal';
+import { Link } from 'react-router-dom';
 
 interface Member {
   id: string;
@@ -185,7 +186,9 @@ const TeamsPage: React.FC = () => {
                     >
                       <div className="flex-1">
                       <h4 className="text-lg font-medium text-gray-800 flex items-center">
-                        {member.nombre}
+                        <Link to={`/profile/${member.id}`} className="hover:underline">
+                          {member.nombre}
+                        </Link>
                         <span className="ml-3 flex items-center bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-semibold">
                           <FaUserTag className="mr-1" /> {member.rol}
                         </span>
@@ -254,12 +257,14 @@ const TeamCard: React.FC<{ team: Team }> = ({ team }) => (
             className="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100"
           >
             <div className="flex-1">
-              <h4 className="text-lg font-medium text-gray-800 flex items-center">
+            <h4 className="text-lg font-medium text-gray-800 flex items-center">
+              <Link to={`/profile/${member.id}`} className="hover:underline">
                 {member.nombre}
-                <span className="ml-3 flex items-center bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-semibold">
-                  <FaUserTag className="mr-1" /> {member.rol}
-                </span>
-              </h4>
+              </Link>
+              <span className="ml-3 flex items-center bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-semibold">
+                <FaUserTag className="mr-1" /> {member.rol}
+              </span>
+            </h4>
               <p className="text-gray-600 flex items-center">
                 <FaEnvelope className="mr-2 text-green-500" /> {member.email}
               </p>

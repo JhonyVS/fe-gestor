@@ -10,7 +10,7 @@ const Menu: React.FC = () => {
     { name: 'boards', label: 'Boards', icon: <FaTasks /> },
     { name: 'projects', label: 'Projects', icon: <FaProjectDiagram /> },
     { name: 'teams', label: 'Teams', icon: <FaUsers /> },
-    { name: 'staff', label: 'Staff', icon: <FaUserTie /> },
+    // { name: 'profile', label: 'Profile', icon: <FaUserTie /> },
   ];
 
   return (

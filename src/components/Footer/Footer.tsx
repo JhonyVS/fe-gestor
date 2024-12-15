@@ -9,8 +9,8 @@ const Footer: React.FC = () => {
         </p>
       </div>
       <div className="container mx-auto flex items-center justify-center">
-        <p className="text-center text-sm">
-          Jhony Veizaga Sanchez.
+        <p className="text-center text-m">
+          JHONY VEIZAGA SANCHEZ
         </p>
       </div>
     </footer>
