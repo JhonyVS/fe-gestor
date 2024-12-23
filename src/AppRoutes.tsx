@@ -8,18 +8,12 @@ import TeamsPage from './pages/TeamsPage';
 import UserProfile from './pages/UserProfile';
 import NotFoundPage from './pages/NotFoundPage';
 import NotAuthorizedPage from './pages/NotAuthorizedPage';
-import WorkspacePage from './features/workspace/workspacePage';
 import ProjectDetailsAvancePage from './pages/ProjectDetailsAvancePage';
-import TableroPage from './features/tablero/tableroPage';
-import KanbanPage from './pages/KanbanBoard';
 
 export const routes = [
   { path: "/", element: <LandingPage /> },
   { path: "/home", element: <HomePage /> },
   { path: "/boards", element: <BoardsPage /> },
-  { path: "/workspace", element: <WorkspacePage /> },
-  { path: "kanbanboard", element: <KanbanPage />},
-  { path: "/tableros/:tableroId", element: <TableroPage /> },
   { path: "/projects", element: <ProjectsPage /> },
   { path: "/projects/:projectId", element: <ProjectDetailsPage /> },
   { path: "/projects/avance/:projectId", element: <ProjectDetailsAvancePage /> },

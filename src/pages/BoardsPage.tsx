@@ -1,6 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { FaPlus, FaTasks, FaColumns, FaTrello, FaClipboard } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { FaPlus, FaTasks, FaTrello, FaClipboard, FaEllipsisV } from "react-icons/fa";
+import EditTaskModal from "../components/Modal/EditTaskModalProps";
+import ConfirmationModal from "../components/Modal/ConfirmationModal";
+import CreateTaskModal from "../components/Modal/CreateTaskModal";
+import CreateCardModal from "../components/Modal/CreateCardModal";
+
+
 
 interface Task {
   id: string;
@@ -22,39 +28,44 @@ interface Board {
 
 const BoardsPage: React.FC = () => {
   const [boards, setBoards] = useState<Board[]>([]);
-  const [showTaskForm, setShowTaskForm] = useState<{ show: boolean; cardId: string | null }>({ show: false, cardId: null });
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [newBoardTitle, setNewBoardTitle] = useState('');
-  const [showBoardForm, setShowBoardForm] = useState(false);
-  const [newCardTitle, setNewCardTitle] = useState('');
-  const [showCardForm, setShowCardForm] = useState<{ show: boolean; boardId: string | null }>({ show: false, boardId: null });
+  const [taskMenuVisible, setTaskMenuVisible] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<{ id: string; titulo: string; descripcion: string } | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [cardIdForNewTask, setCardIdForNewTask] = useState<string | null>(null);
+  const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
+  const [boardIdForNewCard, setBoardIdForNewCard] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchBoards = async () => {
+  // Función para cargar los tableros desde el backend
+    const refreshBoards = async () => {
       try {
-        const token = sessionStorage.getItem('token');
-        const userId = sessionStorage.getItem('id');
-        
+        const token = sessionStorage.getItem("token");
+        const userId = sessionStorage.getItem("id");
+
         if (!token || !userId) {
-          console.error('Token or userId is missing');
+          console.error("Token or userId is missing");
           return;
         }
-        
-        const response = await fetch(`http://localhost:8080/workspace/by-project-manager/${userId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+
+        const response = await fetch(
+          `http://localhost:8080/workspace/by-project-manager/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch boards');
+          throw new Error("Failed to fetch boards");
         }
 
         const data = await response.json();
-        
+
         const mappedBoards: Board[] = data.tableros.map((tablero: any) => ({
           id: tablero.id,
           title: tablero.titulo,
@@ -64,114 +75,258 @@ const BoardsPage: React.FC = () => {
             tasks: tarjeta.tareas.map((tarea: any) => ({
               id: tarea.id,
               title: tarea.titulo,
-              description: tarea.descripcion
-            }))
-          }))
+              description: tarea.descripcion,
+            })),
+          })),
         }));
-
         setBoards(mappedBoards);
       } catch (error) {
-        console.error('Error fetching boards:', error);
-  
+        console.error("Error fetching boards:", error);
       }
     };
 
-    fetchBoards();
-  }, []);
+    useEffect(() => {
+      refreshBoards();
+    }, []);
 
-  const onDragEnd = (result: DropResult) => {
+    // Abrir el modal para editar una tarea
+    const handleEditTask = (taskId: string, taskData: { titulo: string; descripcion: string }) => {
+      setSelectedTask({ id: taskId, ...taskData });
+      setIsEditModalOpen(true);
+    };
+
+    // Guardar los cambios de la tarea y refrescar los tableros
+    const handleSaveTask = async (data: { titulo: string; descripcion: string }) => {
+      if (!selectedTask) return;
+
+
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `http://localhost:8080/tarea/update/${selectedTask.id}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update task");
+        }
+
+        // Refrescar el estado global de los tableros
+        await refreshBoards();
+
+        console.log("Task updated successfully!");
+      } catch (error) {
+        console.error("Error updating task:", error);
+      }
+
+      setIsEditModalOpen(false); // Cierra el modal después de guardar
+    };
+
+    const handleAddBoard = () => {
+      console.log("Add new board");
+      // Add your endpoint logic here
+    };
+
+
+
+    const handleOpenAddCardModal = (boardId: string) => {
+      setBoardIdForNewCard(boardId);
+      setIsAddCardModalOpen(true);
+    };
+    const handleAddCard = async (data: { titulo: string; descripcion: string }) => {
+      if (!boardIdForNewCard) return;
+  
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing");
+        return;
+      }
+  
+      try {
+        const response = await fetch("http://localhost:8080/tarjeta/create", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tableroId: boardIdForNewCard,
+            titulo: data.titulo,
+            descripcion: data.descripcion,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to create card");
+        }
+  
+        // Refrescar tableros después de crear la tarjeta
+        await refreshBoards();
+        setIsAddCardModalOpen(false);
+        setBoardIdForNewCard(null);
+      } catch (error) {
+        console.error("Error creating card:", error);
+      }
+    };
+
+    const handleCreateTask = async (data: { titulo: string; descripcion: string }) => {
+      if (!cardIdForNewTask) return;
+      
+  
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing");
+        return;
+      }
+      console.log(cardIdForNewTask);
+      try {
+        const response = await fetch(`http://localhost:8080/tarea/create`,{
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            
+            body: JSON.stringify({
+              titulo: data.titulo,
+              descripcion: data.descripcion,
+              tarjetaId: cardIdForNewTask,
+              
+            }),
+          }
+        );
+        
+  
+        if (!response.ok) {
+          throw new Error("Failed to create task");
+        }
+  
+        console.log("Task created successfully!");
+  
+        // Refrescar los tableros
+        await refreshBoards();
+      } catch (error) {
+        console.error("Error creating task:", error);
+      } finally {
+        setIsCreateModalOpen(false);
+        setCardIdForNewTask(null);
+      }
+    };
+    
+
+    const handleDeleteTask = async () => {
+      if (!taskToDelete) return;
+  
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("Token is missing");
+        return;
+      }
+  
+      try {
+        const response = await fetch(`http://localhost:8080/tarea/delete/${taskToDelete}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to delete task");
+        }
+  
+        console.log("Task deleted successfully!");
+  
+        // Refrescar el estado de los tableros
+        await refreshBoards();
+      } catch (error) {
+        console.error("Error deleting task:", error);
+      } finally {
+        setIsDeleteModalOpen(false);
+      }
+    };
+
+    const toggleTaskMenu = (taskId: string) => {
+      setTaskMenuVisible((prev) => (prev === taskId ? null : taskId));
+    };
+
+  const onDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
 
     if (!destination) return;
 
-    const sourceBoardIndex = boards.findIndex(board =>
-      board.cards.some(card => card.id === source.droppableId)
+    const sourceBoardIndex = boards.findIndex((board) =>
+      board.cards.some((card) => card.id === source.droppableId)
     );
-    const destBoardIndex = boards.findIndex(board =>
-      board.cards.some(card => card.id === destination.droppableId)
+    const destBoardIndex = boards.findIndex((board) =>
+      board.cards.some((card) => card.id === destination.droppableId)
     );
 
     if (sourceBoardIndex === -1 || destBoardIndex === -1) return;
 
-    const sourceCard = boards[sourceBoardIndex].cards.find(card => card.id === source.droppableId);
-    const destCard = boards[destBoardIndex].cards.find(card => card.id === destination.droppableId);
-
+    const sourceCard = boards[sourceBoardIndex].cards.find(
+      (card) => card.id === source.droppableId
+    );
+    const destCard = boards[destBoardIndex].cards.find(
+      (card) => card.id === destination.droppableId
+      
+    );
+    
     if (!sourceCard || !destCard) return;
 
+    // Update tasks locally
     const [movedTask] = sourceCard.tasks.splice(source.index, 1);
     destCard.tasks.splice(destination.index, 0, movedTask);
 
     const updatedBoards = [...boards];
     setBoards(updatedBoards);
-  };
 
-  const handleAddTaskClick = (cardId: string) => {
-    setShowTaskForm({ show: true, cardId });
-  };
+    // Prepare data for the backend
+    const dataToSend = updatedBoards.map((board) =>
+      board.cards.map((card) => ({
+        tarjetaId: card.id,
+        tareasIds: card.tasks.map((task) => task.id),
+      }))
+    );
 
-  const handleAddTask = () => {
-    if (showTaskForm.cardId) {
-      setBoards(prevBoards => {
-        return prevBoards.map(board => {
-          return {
-            ...board,
-            cards: board.cards.map(card => {
-              if (card.id === showTaskForm.cardId) {
-                return {
-                  ...card,
-                  tasks: [
-                    ...card.tasks,
-                    {
-                      id: `task-${Date.now()}`,
-                      title: newTaskTitle,
-                      description: newTaskDescription
-                    }
-                  ]
-                };
-              }
-              return card;
-            })
-          };
-        });
-      });
+    try {
+      const token = sessionStorage.getItem("token");
+
+      if (!token) {
+        console.error("Token is missing");
+        return;
+      }
+
+      // Send updated tasks to the backend
+      await fetch(
+        `http://localhost:8080/tablero/${boards[sourceBoardIndex].id}/actualizar-tareas`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataToSend.flat()),
+        }
+      );
+
+      console.log("Changes saved successfully!");
+    } catch (error) {
+      console.error("Error saving changes:", error);
     }
-    setNewTaskTitle('');
-    setNewTaskDescription('');
-    setShowTaskForm({ show: false, cardId: null });
-  };
-  const handleAddBoard = () => {
-    const newBoard: Board = {
-      id: `board-${Date.now()}`,
-      title: newBoardTitle || `Nuevo Tablero ${boards.length + 1}`,
-      cards: [] // Inicialmente vacío
-    };
-    setBoards([...boards, newBoard]);
-    setNewBoardTitle('');
-    setShowBoardForm(false);
-  };
-  const handleAddCard = () => {
-    if (showCardForm.boardId) {
-      setBoards(prevBoards => {
-        return prevBoards.map(board => {
-          if (board.id === showCardForm.boardId) {
-            return {
-              ...board,
-              cards: [
-                ...board.cards,
-                {
-                  id: `card-${Date.now()}`,
-                  title: newCardTitle,
-                  tasks: [] // Inicialmente vacío
-                }
-              ]
-            };
-          }
-          return board;
-        });
-      });
-    }
-    setNewCardTitle('');
-    setShowCardForm({ show: false, boardId: null });
   };
 
   return (
@@ -180,130 +335,164 @@ const BoardsPage: React.FC = () => {
         <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700 flex items-center justify-center space-x-3">
           <FaTrello /> <span>Tableros</span>
         </h1>
-        
+
         <div className="space-y-10">
-        {boards.map((board) => (
-          <div key={board.id} className="p-6 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center space-x-2">
-              <FaClipboard /> <span>{board.title}</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {board.cards.map((card) => (
-                <Droppable droppableId={card.id} key={card.id}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="min-w-[300px] p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200"
-                    >
-                      <h3 className="text-xl font-medium mb-3 text-blue-600 flex items-center space-x-2">
-                        <FaTasks /> <span>{card.title}</span>
-                      </h3>
-                      <ul className="space-y-2">
+          {boards.map((board) => (
+            <div
+              key={board.id}
+              className="p-6 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-2xl transition-shadow duration-300"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold text-gray-800 flex items-center space-x-2">
+                  <FaClipboard /> <span>{board.title}</span>
+                </h2>
+                <button
+                  className="p-2 text-green-500 hover:text-green-700"
+                  onClick={() => handleOpenAddCardModal(board.id)}
+                >
+                  <FaPlus />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {board.cards.map((card) => (
+                  
+                  <Droppable droppableId={card.id} key={card.id}>
+                    
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="min-w-[300px] p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200"
+                      >
+                        <h3 className="text-xl font-medium mb-3 text-blue-600 flex items-center space-x-2">
+                          <FaTasks /> <span>{card.title}</span>
+                        </h3>
+                        <ul className="space-y-2">
+                          
                         {card.tasks.map((task, index) => (
-                          <Draggable draggableId={task.id} index={index} key={task.id}>
+                          <Draggable
+                            draggableId={task.id}
+                            index={index}
+                            key={task.id}
+                          >
                             {(provided) => (
                               <li
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className="p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-700"
+                                className="p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-700 flex justify-between items-center relative"
                               >
-                                {task.title}
+                                <span>{task.title}</span>
+                                <button
+                                  className="p-1 text-gray-500 hover:text-gray-700"
+                                  onClick={() => toggleTaskMenu(task.id)}
+                                >
+                                  <FaEllipsisV />
+                                </button>
+                                {taskMenuVisible === task.id && (
+                                  <div
+                                    className="absolute right-0 top-10 bg-white border border-gray-300 rounded-lg shadow-lg w-40 z-50"
+                                    onMouseLeave={() => setTaskMenuVisible(null)} // Cierra el menú cuando el mouse deja el área del menú
+                                  >
+                                    <button
+                                      className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setTaskMenuVisible(null); // Cierra el menú contextual
+                                        handleEditTask(task.id, {
+                                          titulo: task.title,
+                                          descripcion: task.description,
+                                        });
+                                      }}
+                                    >
+                                      Editar
+                                    </button>
+                                    <button
+                                      className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setTaskMenuVisible(null); // Cierra el menú contextual
+                                        setIsDeleteModalOpen(true);
+                                        setTaskToDelete(task.id);
+                                      }}
+                                    >
+                                      Eliminar
+                                    </button>
+                                  </div>
+                                )}
                               </li>
                             )}
                           </Draggable>
                         ))}
-                        {provided.placeholder}
-                      </ul>
-                      <button onClick={() => handleAddTaskClick(card.id)} className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200 flex items-center space-x-2">
-                        <FaPlus /> <span>Agregar tarea</span>
-                        </button>
-                    </div>
-                  )}
-                </Droppable>
-              ))}
+                        <div className="flex justify-center mt-4">
+                           {/* Botón para agregar tarea */}
+                            <button
+                              onClick={() => {
+                                setCardIdForNewTask(card.id);
+                                setIsCreateModalOpen(true);
+                              }}
+                              className="mt-4 text-blue-500 hover:text-blue-700 flex items-center"
+                            >
+                              <FaPlus className="mr-2" />
+                              Agregar Tarea
+                            </button>
+                          </div>
+                          {provided.placeholder}
+                        </ul>
+                      </div>
+                    )}
+                  </Droppable>
+                ))}
+              </div>
             </div>
-            <button
-              onClick={() => setShowCardForm({ show: true, boardId: board.id })}
-              className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors duration-200 flex items-center space-x-2"
-            >
-              <FaPlus /> <span>Agregar tarjeta</span>
-            </button>
-          </div>
-        ))}
+          ))}
         </div>
-
-        {showTaskForm.show && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded shadow-md">
-              <h2 className="text-2xl mb-4">Nueva Tarea</h2>
-              <input
-                type="text"
-                placeholder="Título de la tarea"
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="w-full mb-2 p-2 border rounded"
-              />
-              <textarea
-                placeholder="Descripción de la tarea"
-                value={newTaskDescription}
-                onChange={(e) => setNewTaskDescription(e.target.value)}
-                className="w-full mb-2 p-2 border rounded"
-              ></textarea>
-              <button onClick={handleAddTask} className="bg-green-500 text-white px-4 py-2 rounded mr-2">Agregar</button>
-              <button onClick={() => setShowTaskForm({ show: false, cardId: null })} className="bg-red-500 text-white px-4 py-2 rounded">Cancelar</button>
-            </div>
-          </div>
-        )}
-
-        {showBoardForm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded shadow-md">
-              <h2 className="text-2xl mb-4">Nuevo Tablero</h2>
-              <input
-                type="text"
-                placeholder="Título del tablero"
-                value={newBoardTitle}
-                onChange={(e) => setNewBoardTitle(e.target.value)}
-                className="w-full mb-2 p-2 border rounded"
-              />
-              <button onClick={handleAddBoard} className="bg-green-500 text-white px-4 py-2 rounded mr-2">Agregar</button>
-              <button onClick={() => setShowBoardForm(false)} className="bg-red-500 text-white px-4 py-2 rounded">Cancelar</button>
-            </div>
-          </div>
-        )}
-
-        {showCardForm.show && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded shadow-md">
-              <h2 className="text-2xl mb-4">Nueva Tarjeta</h2>
-              <input
-                type="text"
-                placeholder="Título de la tarjeta"
-                value={newCardTitle}
-                onChange={(e) => setNewCardTitle(e.target.value)}
-                className="w-full mb-2 p-2 border rounded"
-              />
-              <button onClick={handleAddCard} className="bg-green-500 text-white px-4 py-2 rounded mr-2">Agregar</button>
-              <button onClick={() => setShowCardForm({ show: false, boardId: null })} className="bg-red-500 text-white px-4 py-2 rounded">Cancelar</button>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-12 flex justify-center">
+        <div className="flex justify-center mt-10">
           <button
-            onClick={() => setShowBoardForm(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition-transform transform hover:scale-105 flex items-center space-x-3"
+            className="p-3 bg-green-500 text-white rounded-lg hover:bg-green-700"
+            onClick={handleAddBoard}
           >
-            <FaPlus /> <span>Agregar nuevo tablero</span>
+            <FaPlus className="text-lg" /> Agregar Tablero
           </button>
         </div>
       </div>
+      {/* Renderiza el modal aquí */}
+      {isEditModalOpen && selectedTask && (
+        <EditTaskModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleSaveTask}
+          initialData={selectedTask}
+        />
+      )}
+      
+      {/* Modal de confirmación para eliminar tareas */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteTask}
+        message="¿Estás seguro de que deseas eliminar esta tarea?"
+      />
+
+      {/* Modal para crear nueva tarea */}
+      {isCreateModalOpen && (
+        <CreateTaskModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleCreateTask}
+        />
+      )}
+
+      {/* Modal para agregar tarjetas */}
+      {isAddCardModalOpen && (
+        <CreateCardModal
+          isOpen={isAddCardModalOpen}
+          onClose={() => setIsAddCardModalOpen(false)}
+          onSave={handleAddCard}
+        />
+      )}
+      
     </DragDropContext>
   );
+  
 };
 
 export default BoardsPage;
-
-                     
