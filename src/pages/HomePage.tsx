@@ -10,9 +10,9 @@ const HomePage: React.FC = () => {
       <br/><br/><br/>
       {/* Tarjetas de acceso rápido */}
       <div className="grid grid-cols-2 gap-8">
-        <Link to="/boards" className="p-6 bg-blue-500 text-white rounded-lg shadow-lg text-center">
-          <h2 className="text-xl font-bold">Mis Tableros</h2>
-          <p>Accede a tus tableros de trabajo</p>
+        <Link to="/activities" className="p-6 bg-blue-500 text-white rounded-lg shadow-lg text-center">
+          <h2 className="text-xl font-bold">Mis Actividades</h2>
+          <p>Accede a tus actividades de trabajo</p>
         </Link>
         
         <Link to="/projects" className="p-6 bg-green-500 text-white rounded-lg shadow-lg text-center">
@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
           <p>Gestiona tus equipos de trabajo</p>
         </Link>
         
-        <Link to="/staff" className="p-6 bg-red-500 text-white rounded-lg shadow-lg text-center">
+        <Link to="" className="p-6 bg-red-500 text-white rounded-lg shadow-lg text-center">
           <h2 className="text-xl font-bold">Staff</h2>
           <p>Ver y gestionar el personal</p>
         </Link>

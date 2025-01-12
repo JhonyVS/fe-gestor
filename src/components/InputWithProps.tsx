@@ -38,6 +38,7 @@ const InputWithProps: React.FC<InputWithPropsProps> = ({ id, type, placeholder, 
         type={type}
         placeholder={placeholder}
         defaultValue={defaultValue}
+        autoComplete="current-password" 
         onChange={handleChange}
       />
       {!isValid && errorMessage && <p className="text-red-500 text-xs italic">{errorMessage}</p>}

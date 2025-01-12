@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { FaPlus, FaTasks, FaTrello, FaClipboard, FaEllipsisV } from "react-icons/fa";
+import { FaPlus, FaTasks, FaTrello, FaClipboard, FaEllipsisV, FaChartLine, FaCalendarPlus } from "react-icons/fa";
 import EditTaskModal from "../components/Modal/EditTaskModalProps";
 import ConfirmationModal from "../components/Modal/ConfirmationModal";
 import CreateTaskModal from "../components/Modal/CreateTaskModal";
 import CreateCardModal from "../components/Modal/CreateCardModal";
+import AddBoardModal from "../components/Modal/AddBoardModal";
 
 
 
@@ -26,7 +27,7 @@ interface Board {
   cards: Card[];
 }
 
-const BoardsPage: React.FC = () => {
+const ActivitiesPage: React.FC = () => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [taskMenuVisible, setTaskMenuVisible] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,12 +38,15 @@ const BoardsPage: React.FC = () => {
   const [cardIdForNewTask, setCardIdForNewTask] = useState<string | null>(null);
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
   const [boardIdForNewCard, setBoardIdForNewCard] = useState<string | null>(null);
+  const [isAddBoardModalOpen, setIsAddBoardModalOpen] = useState(false);
+  const token = sessionStorage.getItem("token");
+  const userId = sessionStorage.getItem("id");
+  const [workspaceId , setWorkspaceId] = useState<string | null>(null);
+
 
   // Función para cargar los tableros desde el backend
     const refreshBoards = async () => {
       try {
-        const token = sessionStorage.getItem("token");
-        const userId = sessionStorage.getItem("id");
 
         if (!token || !userId) {
           console.error("Token or userId is missing");
@@ -65,7 +69,7 @@ const BoardsPage: React.FC = () => {
         }
 
         const data = await response.json();
-
+        
         const mappedBoards: Board[] = data.tableros.map((tablero: any) => ({
           id: tablero.id,
           title: tablero.titulo,
@@ -80,6 +84,7 @@ const BoardsPage: React.FC = () => {
           })),
         }));
         setBoards(mappedBoards);
+        setWorkspaceId(data.id);
       } catch (error) {
         console.error("Error fetching boards:", error);
       }
@@ -99,8 +104,6 @@ const BoardsPage: React.FC = () => {
     const handleSaveTask = async (data: { titulo: string; descripcion: string }) => {
       if (!selectedTask) return;
 
-
-      const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("Token is missing");
         return;
@@ -134,9 +137,48 @@ const BoardsPage: React.FC = () => {
       setIsEditModalOpen(false); // Cierra el modal después de guardar
     };
 
-    const handleAddBoard = () => {
-      console.log("Add new board");
-      // Add your endpoint logic here
+    // agregar tablero
+    const handleOpenAddBoardModal = () => {
+      setIsAddBoardModalOpen(true);
+    };
+
+    const handleCloseAddBoardModal = () => {
+      setIsAddBoardModalOpen(false);
+    };
+
+    // Lógica para crear el tablero y refrescar la lista
+    const handleAddBoard = async (data: { titulo: string; descripcion: string }) => {
+      if (!token) {
+        console.error("Token is missing");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8080/tablero/create", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            workspaceId: workspaceId,
+            titulo: data.titulo,
+            descripcion: data.descripcion,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create board");
+        }
+
+        console.log("Board created successfully!");
+        // Refrescar la lista de tableros
+        await refreshBoards();
+      } catch (error) {
+        console.error("Error creating board:", error);
+      } finally {
+        setIsAddBoardModalOpen(false);
+      }
     };
 
 
@@ -147,8 +189,6 @@ const BoardsPage: React.FC = () => {
     };
     const handleAddCard = async (data: { titulo: string; descripcion: string }) => {
       if (!boardIdForNewCard) return;
-  
-      const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("Token is missing");
         return;
@@ -184,8 +224,6 @@ const BoardsPage: React.FC = () => {
     const handleCreateTask = async (data: { titulo: string; descripcion: string }) => {
       if (!cardIdForNewTask) return;
       
-  
-      const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("Token is missing");
         return;
@@ -229,7 +267,6 @@ const BoardsPage: React.FC = () => {
     const handleDeleteTask = async () => {
       if (!taskToDelete) return;
   
-      const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("Token is missing");
         return;
@@ -303,7 +340,6 @@ const BoardsPage: React.FC = () => {
     );
 
     try {
-      const token = sessionStorage.getItem("token");
 
       if (!token) {
         console.error("Token is missing");
@@ -330,9 +366,21 @@ const BoardsPage: React.FC = () => {
   };
 
   return (
+    <div className="bg-gray-100 p-6">
+
+      {/* seccion eventos */}
+      <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-10">
+          <h2 className="text-3xl font-semibold mb-4 flex items-center text-green-700">
+            <FaCalendarPlus className="mr-2" /> Reuniones y eventos importantes:
+          </h2>
+        </div>
+      </section>
+
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="p-8 bg-gradient-to-b from-gray-100 to-white">
-        <h1 className="text-4xl font-extrabold mb-10 text-center text-blue-700 flex items-center justify-center space-x-3">
+    <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+        
+        <h1 className="text-3xl font-extrabold mb-10 text-center text-blue-700 flex items-center justify-center space-x-3">
           <FaTrello /> <span>Tableros</span>
         </h1>
 
@@ -353,7 +401,7 @@ const BoardsPage: React.FC = () => {
                   <FaPlus />
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="min-w-[220px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {board.cards.map((card) => (
                   
                   <Droppable droppableId={card.id} key={card.id}>
@@ -362,7 +410,7 @@ const BoardsPage: React.FC = () => {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className="min-w-[300px] p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200"
+                        className="min-w-[200px] p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200"
                       >
                         <h3 className="text-xl font-medium mb-3 text-blue-600 flex items-center space-x-2">
                           <FaTasks /> <span>{card.title}</span>
@@ -445,14 +493,17 @@ const BoardsPage: React.FC = () => {
             </div>
           ))}
         </div>
+        
         <div className="flex justify-center mt-10">
           <button
-            className="p-3 bg-green-500 text-white rounded-lg hover:bg-green-700"
-            onClick={handleAddBoard}
+            className="p-3 bg-green-500 text-white rounded-lg hover:bg-green-700 flex items-center"
+            onClick={handleOpenAddBoardModal}
           >
-            <FaPlus className="text-lg" /> Agregar Tablero
+            <FaPlus className="mr-2" />
+            Agregar Tablero
           </button>
         </div>
+        
       </div>
       {/* Renderiza el modal aquí */}
       {isEditModalOpen && selectedTask && (
@@ -489,10 +540,20 @@ const BoardsPage: React.FC = () => {
           onSave={handleAddCard}
         />
       )}
+
+      {/* Modal para crear un nuevo tablero */}
+      <AddBoardModal
+        isOpen={isAddBoardModalOpen}
+        onClose={handleCloseAddBoardModal}
+        onSave={handleAddBoard}
+      />
       
     </DragDropContext>
+    
+    </div>
+    
   );
   
 };
 
-export default BoardsPage;
+export default ActivitiesPage;

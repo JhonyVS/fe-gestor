@@ -7,7 +7,7 @@ const Menu: React.FC = () => {
 
   const menuItems = [
     { name: 'home', label: 'Home', icon: <FaHome /> },
-    { name: 'boards', label: 'Boards', icon: <FaTasks /> },
+    { name: 'activities', label: 'Activities', icon: <FaTasks /> },
     { name: 'projects', label: 'Projects', icon: <FaProjectDiagram /> },
     { name: 'teams', label: 'Teams', icon: <FaUsers /> },
     // { name: 'profile', label: 'Profile', icon: <FaUserTie /> },
