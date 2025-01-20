@@ -372,7 +372,7 @@ const ActivitiesPage: React.FC = () => {
       <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-10">
           <h2 className="text-3xl font-semibold mb-4 flex items-center text-green-700">
-            <FaCalendarPlus className="mr-2" /> Reuniones y eventos importantes:
+            <FaCalendarPlus className="mr-2" /> Actividades importantes:
           </h2>
         </div>
       </section>
