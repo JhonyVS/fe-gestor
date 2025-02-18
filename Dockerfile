@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Instalar dependencias necesarias para React
 # En este caso, evitamos conflictos futuros con permisos al instalar globalmente
-RUN npm install -g npm@latest
+RUN npm install -g npm@10.8.2
 
 # Copiar los archivos del proyecto (excepto node_modules)
 COPY package*.json ./

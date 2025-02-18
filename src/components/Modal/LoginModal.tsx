@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
 import InputWithProps from '../InputWithProps';
@@ -10,6 +10,7 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Estado para el mensaje de error
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -29,26 +30,26 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Guardar el token en sessionStorage
         sessionStorage.setItem('token', data.jwt);
 
         // Guardar los datos adicionales del usuario en sessionStorage
-        sessionStorage.setItem('id',data.id);
+        sessionStorage.setItem('id', data.id);
         sessionStorage.setItem('user', data.username);
         sessionStorage.setItem('nombres', data.nombres);
         sessionStorage.setItem('apellidos', data.apellidos);
 
-        // Guardar la lista de UUIDs de proyectos (la conviertes a JSON porque es un array)
-        //sessionStorage.setItem('projectUUIDs', JSON.stringify(data.projectUUIDs));
-
         // Redirigir al home
         navigate('/home');
       } else {
-        console.error('Error al iniciar sesión');
+        // Manejo de errores basado en la respuesta
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || 'Error al iniciar sesión');
       }
     } catch (error) {
       console.error('Error en la solicitud de autenticación', error);
+      setErrorMessage('Error al conectar con el servidor. Inténtalo más tarde.');
     }
   };
 
@@ -74,6 +75,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             label="Contraseña"
             icon={faLock}
           />
+          {errorMessage && (
+            <div className="text-red-500 text-center my-2">
+              {errorMessage}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <button
               className="bg-customRed hover:bg-customLightRed text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
