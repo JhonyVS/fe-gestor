@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 
-// Define las props que acepta el componente
 interface CreateTeamButtonProps {
-    onTeamCreated: () => void;
-  }
+  onTeamCreated: () => void;
+  projectId: string | undefined; // Permitir projectId como string o undefined
+}
 
-const CreateTeamButton: React.FC<CreateTeamButtonProps> = ({ onTeamCreated }) => {
+const CreateTeamButton: React.FC<CreateTeamButtonProps> = ({ onTeamCreated, projectId }) => {
   const [showModal, setShowModal] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleCreateTeam = async () => {
+    // Verificar que projectId no sea undefined
+    if (!projectId) {
+      setError('El ID del proyecto no está definido.');
+      return;
+    }
+
     const token = sessionStorage.getItem('token');
     const userId = sessionStorage.getItem('id');
 
@@ -35,6 +41,7 @@ const CreateTeamButton: React.FC<CreateTeamButtonProps> = ({ onTeamCreated }) =>
           usuarioCapitan: {
             id: userId, // ID del usuario capitán
           },
+          proyectoId: projectId, // Incluir el ID del proyecto
         }),
       });
 

@@ -27,16 +27,17 @@ const AgregarIntegranteModal: React.FC<Props> = ({ equipoId, onClose, onIntegran
   const [rolSeleccionado, setRolSeleccionado] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Fetch roles cuando se monta el componente
-useEffect(() => {
+  useEffect(() => {
     const fetchRoles = async () => {
       try {
         const token = sessionStorage.getItem('token');
         if (!token) {
           throw new Error("Token no encontrado en el almacenamiento");
         }
-  
+
         const response = await fetch("http://localhost:8080/rol/all", {
           method: 'GET',
           headers: {
@@ -44,11 +45,11 @@ useEffect(() => {
             'Content-Type': 'application/json',
           },
         });
-  
+
         if (!response.ok) {
           throw new Error("Error al obtener roles");
         }
-  
+
         const data = await response.json();
         setRoles(data);
       } catch (error) {
@@ -56,13 +57,17 @@ useEffect(() => {
         setError("No se pudieron cargar los roles");
       }
     };
-  
+
     fetchRoles();
   }, []);
-  
 
   // Buscar usuario por email
-const buscarUsuarioPorEmail = async () => {
+  const buscarUsuarioPorEmail = async () => {
+    if (!email) {
+      setError("Por favor, introduce un email válido.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -70,7 +75,7 @@ const buscarUsuarioPorEmail = async () => {
       if (!token) {
         throw new Error("Token no encontrado en el almacenamiento");
       }
-  
+
       const response = await fetch(`http://localhost:8080/usuario/email/${email}`, {
         method: 'GET',
         headers: {
@@ -78,11 +83,11 @@ const buscarUsuarioPorEmail = async () => {
           'Content-Type': 'application/json',
         },
       });
-  
+
       if (!response.ok) {
         throw new Error("Usuario no encontrado");
       }
-  
+
       const data = await response.json();
       setUsuario(data);
     } catch (error) {
@@ -93,18 +98,23 @@ const buscarUsuarioPorEmail = async () => {
       setLoading(false);
     }
   };
-  
 
   // Agregar integrante al equipo
   const agregarIntegrante = async () => {
-    if (!usuario || !rolSeleccionado) return;
+    if (!usuario || !rolSeleccionado) {
+      setError("Por favor, selecciona un usuario y un rol.");
+      return;
+    }
 
+    setLoading(true);
+    setError(null);
     try {
-        const token = sessionStorage.getItem('token');
-        if (!token) {
-            throw new Error("Token no encontrado en el almacenamiento");
-        }
-        const response = await fetch("http://localhost:8080/miembro/create", {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error("Token no encontrado en el almacenamiento");
+      }
+
+      const response = await fetch("http://localhost:8080/miembro/create", {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -123,10 +133,16 @@ const buscarUsuarioPorEmail = async () => {
 
       // Notificar al componente padre que se agregó un integrante
       onIntegranteAgregado();
-      onClose();
+      setSuccess("Integrante agregado correctamente.");
+      setTimeout(() => {
+        setSuccess(null);
+        onClose();
+      }, 1500); // Cerrar el modal después de 1.5 segundos
     } catch (error) {
       console.error(error);
       setError("No se pudo agregar el integrante");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,6 +168,7 @@ const buscarUsuarioPorEmail = async () => {
             {loading ? "Buscando..." : "Buscar Usuario"}
           </button>
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {success && <p className="text-green-600 text-sm mt-2">{success}</p>}
           {usuario && (
             <p className="text-green-600 text-sm mt-2">
               Usuario encontrado: {usuario.nombres} {usuario.apellidos}
@@ -187,9 +204,9 @@ const buscarUsuarioPorEmail = async () => {
           <button
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
             onClick={agregarIntegrante}
-            disabled={!usuario || !rolSeleccionado}
+            disabled={!usuario || !rolSeleccionado || loading}
           >
-            Agregar
+            {loading ? "Agregando..." : "Agregar"}
           </button>
         </div>
       </div>

@@ -23,7 +23,6 @@ const TeamsPage: React.FC = () => {
   const [memberTeams, setMemberTeams] = useState<Team[]>([]);
   const [loadingMyTeams, setLoadingMyTeams] = useState(true);
   const [loadingMemberTeams, setLoadingMemberTeams] = useState(true);
-
   const [mostrarModal, setMostrarModal] = useState(false);
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<string | null>(null);
 
