@@ -42,6 +42,7 @@ const CreateTeamButton: React.FC<CreateTeamButtonProps> = ({ onTeamCreated, proj
             id: userId, // ID del usuario capitán
           },
           proyectoId: projectId, // Incluir el ID del proyecto
+
         }),
       });
 
@@ -53,7 +54,6 @@ const CreateTeamButton: React.FC<CreateTeamButtonProps> = ({ onTeamCreated, proj
       setTeamName('');
       setShowModal(false);
       setLoading(false);
-
       // Opcional: Actualizar la lista de equipos aquí si tienes un manejador global.
       alert('Equipo creado con éxito');
       onTeamCreated(); // Llama a la función para refrescar los equipos
