@@ -150,7 +150,10 @@ const TeamsPage: React.FC = () => {
 
       <section>
         <div className="mb-6 flex justify-end">
-          <CreateTeamButton onTeamCreated={fetchMyTeams} />
+        {/* <CreateTeamButton
+              onTeamCreated={fetchMyTeams} // Función para refrescar los equipos
+              projectId={projectId} // Pasar el ID del proyecto
+            /> */}
         </div>
       </section>
 

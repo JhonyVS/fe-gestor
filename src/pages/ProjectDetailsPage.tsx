@@ -4,7 +4,7 @@ import { Doughnut } from 'react-chartjs-2';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ProgressBar from '../components/Graphics/ProgressBar';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { FaUsers, FaComments, FaEnvelope, FaPhone, FaUserTag, FaChartLine, FaTasks, FaShieldAlt, FaFlagCheckered, FaClock, FaCalendarAlt, FaFlag, FaPlus } from 'react-icons/fa';
+import { FaUsers, FaComments, FaUserTag, FaChartLine, FaTasks, FaFlagCheckered, FaClock, FaCalendarAlt, FaFlag, FaPlus } from 'react-icons/fa';
 
 import CreateEventModal from "../components/Modal/CreateEventModalProps";
 
@@ -50,7 +50,8 @@ interface EventoDTO {
 
 const ProjectDetailsPage: React.FC = () => {
 const { projectId } = useParams<{ projectId: string }>();
-const [project, setProject] = useState<{ nombre: string; descripcion: string; fechaInicio: string; fechaFinal: string; projectManagerId: string } | null>(null);
+const [project, setProject] = useState<{ nombre: string; descripcion: string; fechaInicio: string; fechaFinal: string;  projectManagerId: string} | null>(null);
+
 const [equipos, setEquipos] = useState<EquipoDTO[]>([]);
 const [comentarios, setComentarios] = useState<ComentarioDTO[]>([]);
 const [eventos, setEventos] = useState<EventoDTO[]>([]);
@@ -64,6 +65,7 @@ const [tareasContador, setTareasContador] = useState<{ [key: string]: number }>(
   Pendiente: 0,
 });
 const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null>(null); // null por defecto
+
 
 
   useEffect(() => {
@@ -103,6 +105,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
   
     fetchData();
   }, [projectId, token]);
+
 
 
   const progressChartData = {
@@ -449,12 +452,12 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
                         <FaUserTag className="mr-1" /> {integrante.rol}
                       </span>
                     </h4>
-                      <p className="text-gray-600 flex items-center">
+                      {/* <p className="text-gray-600 flex items-center">
                         <FaEnvelope className="mr-2 text-blue-500" /> {integrante.email}
-                      </p>
-                      <p className="text-gray-600 flex items-center">
+                      </p> */}
+                      {/* <p className="text-gray-600 flex items-center">
                         <FaPhone className="mr-2 text-blue-500" /> {integrante.telefono}
-                      </p>
+                      </p> */}
                     </div>
                   </li>
                 ))}

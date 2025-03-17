@@ -15,7 +15,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onRegist
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
-    nacimiento: '',
+    nacimiento: '1990-01-08', // Valor por defecto
     email: '',
     telefono: '',
     username: '',
@@ -31,14 +31,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onRegist
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form Data:', formData); // Para depuración
+    console.log('Form Data:', formData); // Verifica que nacimiento tenga un valor
     try {
       const response = await axios.post('http://localhost:8080/usuario/create', formData);
       console.log('Registro exitoso:', response.data);
-      onRegisterSuccess(); // Cerrar el modal de registro y abrir el modal de login
+      onRegisterSuccess();
     } catch (error) {
       console.error('Error en el registro:', error);
-      // Manejar el error (por ejemplo, mostrar un mensaje de error)
     }
   };
 
@@ -91,12 +90,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onRegist
             onChange={handleChange}
           />
           <InputWithProps
-            id="nacimiento"
+            id="nacimiento" // Asegúrate de que coincida con la clave en formData
             type="date"
             placeholder="Fecha de nacimiento"
             label="Fecha de nacimiento"
             icon={faCalendar}
-            defaultValue="1990-01-08"
+            defaultValue={formData.nacimiento} // Usar el valor del estado
             onChange={handleChange}
           />
           <InputWithProps
@@ -113,7 +112,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onRegist
             placeholder="Contraseña"
             label="Contraseña"
             icon={faLock}
-            pattern=".{10,}"
+            pattern=".{5,}"
             errorMessage="La contraseña debe tener al menos 10 caracteres."
             onChange={handleChange}
           />

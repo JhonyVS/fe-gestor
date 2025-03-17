@@ -116,7 +116,9 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
-  return (
+  return ( 
+    
+    
     <div className="bg-gray-100 p-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
@@ -132,6 +134,8 @@ const ProjectsPage: React.FC = () => {
           </button>
         </div>
 
+        
+
         {loading ? (
           <p className="text-center">Loading...</p>
         ) : (
@@ -139,6 +143,7 @@ const ProjectsPage: React.FC = () => {
             <h2 className="text-2xl font-semibold mb-4 flex items-center">
               <FaUserTie className="mr-2 text-blue-700" /> Proyectos como Project Manager
             </h2>
+            {projects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project) => (
                 <div key={project.id} className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between">
@@ -163,6 +168,9 @@ const ProjectsPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            ) : (
+              <p className="text-gray-600 text-center">No tienes proyectos asignados como project manager.</p>
+            )}
           </>
         )}
 
@@ -173,6 +181,7 @@ const ProjectsPage: React.FC = () => {
             <h2 className="text-2xl font-semibold mt-12 mb-4 flex items-center">
               <FaUsers className="mr-2 text-green-700" /> Proyectos como Miembro
             </h2>
+            {memberProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {memberProjects.map((project) => (
                 <div key={project.id} className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between border-l-4 border-green-500">
@@ -197,8 +206,13 @@ const ProjectsPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            ) : (
+              <p className="text-gray-600 text-center">No tienes proyectos asignados como miembro.</p>
+            )}
           </>
         )}
+
+      
       </div>
 
       {/* Modal */}
