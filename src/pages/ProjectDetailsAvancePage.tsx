@@ -4,11 +4,12 @@ import { Doughnut } from 'react-chartjs-2';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ProgressBar from '../components/Graphics/ProgressBar';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { FaChartLine, FaEnvelope, FaPhone, FaRegSadTear, FaShieldAlt, FaUsers, FaUserTag } from 'react-icons/fa';
-import TareasComponent from '../components/TareasComponent';
-import TareasPerformanceComponent from '../components/TareasPerformanceComponent';
+import { FaChartLine, FaEnvelope, FaPhone, FaShieldAlt, FaUsers, FaUserTag } from 'react-icons/fa';
 import CreateTeamButton from '../components/Modal/CreateButtonTeam';
 import AgregarIntegranteModal from '../components/Modal/AgregarIntegranteModal';
+import SprintTabs from '../components/SprintTabs';
+import HistoriasComponent from '../components/HistoriasComponent';
+
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -19,7 +20,10 @@ interface UsuarioDTO {
   email: string;
   telefono: string;
   rol: string;
+  fechaNacimiento: string;
+  username: string;        
 }
+
 
 interface Member {
   id: string;
@@ -28,19 +32,20 @@ interface Member {
   email: string;
   telefono: string;
 }
-
 interface Team {
   id: string;
   nombre: string;
   integrantes: Member[] | null;
 }
-
 interface EquipoDTO {
   id: string;
   nombre: string;
   proyectoId: string;
   integrantes: UsuarioDTO[];
 }
+
+
+
 
 interface Tarea {
   id: string;
@@ -76,6 +81,13 @@ interface Performance {
   estimacionTerminadas: number;
   estimacionTrabajando: number;
 }
+interface HistoriaDTO {
+  id: string;
+  titulo: string;
+  codigo: string;
+  descripcion: string;
+  activado: boolean;
+}
 
 const ProjectDetailsAvancePage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -90,6 +102,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
     Terminado: 0,
     Pendiente: 0,
   });
+  const [historias, setHistorias] = useState<HistoriaDTO[]>([]);
   const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null>(null);
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const userId = sessionStorage.getItem('id');
@@ -125,11 +138,14 @@ const ProjectDetailsAvancePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [projectResponse, equiposResponse, tareasResponse, todasLasTareasResponse] = await Promise.all([
+        const [projectResponse, equiposResponse,historiasResponse, tareasResponse, todasLasTareasResponse] = await Promise.all([
           axios.get(`http://localhost:8080/proyecto/find/${projectId}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get<EquipoDTO[]>(`http://localhost:8080/proyecto/${projectId}/equipos`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get<HistoriaDTO[]>(`http://localhost:8080/product_backlog/find/historias/${projectId}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`http://localhost:8080/proyecto/${projectId}/tareas/estadisticas`, {
@@ -147,6 +163,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
         setProject(projectResponse.data);
         setEquipos(equiposResponse.data);
         setTareasContador(tareasResponse.data);
+        setHistorias(historiasResponse.data);
         setTareas(todasLasTareasResponse.data);
       } catch (error) {
         console.error('Error fetching project details or tasks:', error);
@@ -221,45 +238,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
     },
   };
 
-  // Calcular tareas por integrante
-  const calcularTareasPorIntegrante = (tareas: Tarea[]): {
-    [key: string]: {
-      usuario: Tarea['usuarioAsignado'];
-      pendiente: number;
-      trabajando: number;
-      terminado: number;
-    };
-  } => {
-    const resultado: {
-      [key: string]: {
-        usuario: Tarea['usuarioAsignado'];
-        pendiente: number;
-        trabajando: number;
-        terminado: number;
-      };
-    } = {};
 
-    tareas.forEach((tarea) => {
-      const { usuarioAsignado, estado } = tarea;
-      if (!usuarioAsignado) return;
-
-      const key = `${usuarioAsignado.id}`;
-      if (!resultado[key]) {
-        resultado[key] = {
-          usuario: usuarioAsignado,
-          pendiente: 0,
-          trabajando: 0,
-          terminado: 0,
-        };
-      }
-
-      if (estado.nombre === 'Pendiente') resultado[key].pendiente++;
-      if (estado.nombre === 'Trabajando') resultado[key].trabajando++;
-      if (estado.nombre === 'Terminado') resultado[key].terminado++;
-    });
-
-    return resultado;
-  };
 
   // Calcular desempeño por estimación
   const calcularPerformance = (tareas: Tarea[]): Performance[] => {
@@ -298,8 +277,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
     );
   };
 
-  // Obtener tareas por integrante
-  const tareasPorIntegrante = useMemo(() => calcularTareasPorIntegrante(tareas), [tareas]);
+  
 
   // Obtener desempeño
   const performance = useMemo(() => calcularPerformance(tareas), [tareas]);
@@ -307,17 +285,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
   // Combinar datos de tareas con la lista de integrantes
   const todosLosIntegrantes = useMemo(() => equipos.flatMap((equipo) => equipo.integrantes), [equipos]);
 
-  const tareasPorIntegranteCompleto = useMemo(() => {
-    return todosLosIntegrantes.map((integrante) => {
-      const tareasUsuario = tareasPorIntegrante[integrante.id] || {
-        usuario: integrante,
-        pendiente: 0,
-        trabajando: 0,
-        terminado: 0,
-      };
-      return tareasUsuario;
-    });
-  }, [todosLosIntegrantes, tareasPorIntegrante]);
+  
 
   const performanceCompleto = useMemo(() => {
     return todosLosIntegrantes.map((integrante) => {
@@ -442,7 +410,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
               {Math.round(porcentajeCompletadas || 0)}%
             </span>
             <div>
-              <p className="text-sm text-gray-500">Tareas completadas</p>
+              <p className="text-sm text-gray-500">Historias completadas</p>
             </div>
           </li>
 
@@ -484,7 +452,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
             {tareasContador.Pendiente || 0}
           </span>
           <div>
-            <p className="text-sm text-gray-500">Tareas Pendientes</p>
+            <p className="text-sm text-gray-500">Historias Pendientes</p>
           </div>
         </li>
         <li className="bg-teal-50 p-4 rounded-lg shadow-md flex items-center">
@@ -492,7 +460,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
             {tareasContador.Trabajando || 0}
           </span>
           <div>
-            <p className="text-sm text-gray-500">Tareas en Proceso</p>
+            <p className="text-sm text-gray-500">Historias en Proceso</p>
           </div>
         </li>
         <li className="bg-teal-50 p-4 rounded-lg shadow-md flex items-center">
@@ -500,7 +468,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
             {tareasContador.Terminado || 0}
           </span>
           <div>
-            <p className="text-sm text-gray-500">Tareas terminadas</p>
+            <p className="text-sm text-gray-500">Historias terminadas</p>
           </div>
 
         </li>
@@ -581,62 +549,28 @@ const ProjectDetailsAvancePage: React.FC = () => {
       )}
     </section>
 
+      {/* SECCION HISTORIAS PRODUCTBACKLOG */}
+      <HistoriasComponent historias = {historias}/>
+          
 
 
-    {/* Sección de Tareas */}
-    <TareasComponent tareas={tareas} />
+    <SprintTabs
+        tareas={tareas}
+        equipos={equipos}
+        performanceCompleto={performanceCompleto}
+      />
 
-    <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
-  <h2 className="text-3xl font-semibold mb-6 flex items-center text-blue-600">
-    <FaUsers className="mr-2" /> Tareas por Integrante
-  </h2>
-  {tareasPorIntegranteCompleto.length > 0 ? (
-    <ul className="space-y-6">
-      {tareasPorIntegranteCompleto.map((integrante) => (
-        <li
-          key={integrante.usuario?.id}
-          className="p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200"
-        >
-          <h3 className="text-xl font-semibold text-gray-800">
-            {integrante.usuario?.nombres} {integrante.usuario?.apellidos}
-          </h3>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            <div className="p-4 bg-yellow-100 rounded-lg shadow-md">
-              <h4 className="text-lg font-semibold text-yellow-600">Pendientes</h4>
-              <p className="text-2xl font-bold text-gray-800">{integrante.pendiente}</p>
-            </div>
-            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-              <h4 className="text-lg font-semibold text-blue-600">Trabajando</h4>
-              <p className="text-2xl font-bold text-gray-800">{integrante.trabajando}</p>
-            </div>
-            <div className="p-4 bg-green-100 rounded-lg shadow-md">
-              <h4 className="text-lg font-semibold text-green-600">Terminadas</h4>
-              <p className="text-2xl font-bold text-gray-800">{integrante.terminado}</p>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="text-gray-500 text-center">
-      <FaRegSadTear className="inline mr-2 text-yellow-400" />
-      No hay tareas asignadas a los integrantes.
-    </p>
-  )}
-</section>
 
-        {/* Sección de Desempeño */}
-        <TareasPerformanceComponent performance={performanceCompleto} />
 
-        {/* Sección de Gestión de Riesgos */}
+    {/* Sección de Gestión de Riesgos */}
       <section className="mt-8 bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-3xl font-semibold mb-4 flex items-center text-red-600">
-          <FaShieldAlt className="mr-2" /> Gestión de Riesgos
+          <FaShieldAlt className="mr-2" /> Riesgo de retraso del proyecto
         </h2>
 
         {/* Barra de Riesgo */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800">Nivel de Riesgo</h3>
+          <h3 className="text-lg font-semibold text-gray-800">Nivel de avance segun el tiempo restante</h3>
           <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
             <div
               className={`h-4 rounded-full ${
@@ -689,7 +623,7 @@ const ProjectDetailsAvancePage: React.FC = () => {
           </div>
           {/* tareas criticas */}
           <div className="p-4 bg-gray-100 rounded-lg shadow-md">
-            <h4 className="text-lg font-semibold text-gray-800">Tareas Críticas por terminar...</h4>
+            <h4 className="text-lg font-semibold text-gray-800">Tareas considerables por terminar ...</h4>
             {tareasCriticas.length > 0 ? (
               <ul className="space-y-2">
                 {tareasCriticas.map((tarea) => (
@@ -707,12 +641,12 @@ const ProjectDetailsAvancePage: React.FC = () => {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-gray-500">No hay tareas críticas pendientes.</p>
+              <p className="text-sm text-gray-500">No hay tareas considerables pendientes.</p>
             )}
           </div>
 
           <div className="p-4 bg-gray-100 rounded-lg shadow-md">
-            <h4 className="text-lg font-semibold text-red-600">Predicción de Riesgo</h4>
+            <h4 className="text-lg font-semibold text-red-600">Predicción de Riesgo de retraso</h4>
             <p className="text-sm text-gray-700">{riesgoPrediccion}</p>
           </div>
 

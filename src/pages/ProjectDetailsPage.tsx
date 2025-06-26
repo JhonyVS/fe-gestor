@@ -299,7 +299,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
               {Math.round(porcentajeCompletadas || 0)}%
             </span>
             <div>
-              <p className="text-sm text-gray-500">Tareas completadas</p>
+              <p className="text-sm text-gray-500">Historias completadas</p>
             </div>
           </li>
 
@@ -341,7 +341,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
             {tareasContador.Pendiente || 0}
           </span>
           <div>
-            <p className="text-sm text-gray-500">Tareas Pendientes</p>
+            <p className="text-sm text-gray-500">Historias Pendientes</p>
           </div>
         </li>
         <li className="bg-teal-50 p-4 rounded-lg shadow-md flex items-center">
@@ -349,7 +349,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
             {tareasContador.Trabajando || 0}
           </span>
           <div>
-            <p className="text-sm text-gray-500">Tareas en Proceso</p>
+            <p className="text-sm text-gray-500">Historias en Proceso</p>
           </div>
         </li>
         <li className="bg-teal-50 p-4 rounded-lg shadow-md flex items-center">
@@ -357,7 +357,7 @@ const [porcentajeCompletadas, setPorcentajeCompletadas] = useState<number | null
             {tareasContador.Terminado || 0}
           </span>
           <div>
-            <p className="text-sm text-gray-500">Tareas terminadas</p>
+            <p className="text-sm text-gray-500">Historias terminadas</p>
           </div>
 
         </li>
