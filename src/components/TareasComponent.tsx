@@ -88,6 +88,11 @@ const TareasComponent: React.FC<TareasComponentProps> = ({ tareas }) => {
                     {tarea.estado.nombre}
                   </span>
                 </p>
+                  <p>
+                   <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                    HU-{Math.floor(Math.random() * 9) + 1}
+                  </span>
+                </p>
               </div>
             </li>
           ))}
